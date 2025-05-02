@@ -353,7 +353,7 @@ public class ClientHandler implements Runnable {
 
     public void handleViewItems() throws IOException {
         // This will return all items in the database
-        ArrayList<Item> allItems = database.allItemList;
+        ArrayList<Item> allItems = new ArrayList<>(database.allItemList);
         output.writeObject(allItems);
         output.flush();
     }

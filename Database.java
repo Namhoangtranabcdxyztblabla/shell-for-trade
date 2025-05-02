@@ -36,41 +36,83 @@ public class Database {
         File userFile = new File(allUserFileName);
         File allItemFile = new File(allItemFileName);
 
+        // Create files if they don't exist
+        try {
+            if (!userFile.exists()) {
+                userFile.createNewFile();
+                System.out.println("Created new user database file: " + allUserFileName);
+            }
+            if (!allItemFile.exists()) {
+                allItemFile.createNewFile();
+                System.out.println("Created new item database file: " + allItemFileName);
+            }
+        } catch (IOException e) {
+            System.out.println("Error creating database files: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // Load user data
         try (BufferedReader bfr = new BufferedReader(new FileReader(userFile))) {
             String line;
             while ((line = bfr.readLine()) != null) {
+                if (line.trim().isEmpty()) continue; // Skip empty lines
+
                 String[] parts = line.split(",");
-                String username = parts[0];
-                String password = parts[1];
-                String email = parts[2];
-                double balance = Double.parseDouble(parts[3]);
-                allUserList.put(email, new User(username, email, password, balance)); // note:
-                // allUserEmail.add(email);
-                // userIDPassword.put(email, password);
-                // allUsername.add(username);
+                if (parts.length < 4) {
+                    System.out.println("Warning: Invalid user data format: " + line);
+                    continue;
+                }
+
+                try {
+                    String username = parts[0];
+                    String password = parts[1];
+                    String email = parts[2];
+                    double balance = Double.parseDouble(parts[3]);
+                    allUserList.put(email, new User(username, email, password, balance));
+                } catch (NumberFormatException e) {
+                    System.out.println("Warning: Invalid balance format in user data: " + line);
+                }
             }
-        } catch (FileNotFoundException e) {
-            System.out.println("Error: File not found");
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("Error reading user database: " + e.getMessage());
+            e.printStackTrace();
         }
 
+        // Load item data
         try (BufferedReader bfr = new BufferedReader(new FileReader(allItemFile))) {
             String line;
             while ((line = bfr.readLine()) != null) {
+                if (line.trim().isEmpty()) continue; // Skip empty lines
+
                 String[] itemPart = line.split(",");
-                String ownerName = itemPart[0];
-                String itemName = itemPart[1];
-                double price = Double.parseDouble(itemPart[2]);
-                String description = itemPart[3];
-                boolean forSale = Boolean.parseBoolean(itemPart[4]);
-                Item item = new Item(allUserList.get(ownerName), itemName, price, description, forSale);
-                allItemList.add(item);
+                if (itemPart.length < 5) {
+                    System.out.println("Warning: Invalid item data format: " + line);
+                    continue;
+                }
+
+                try {
+                    String ownerName = itemPart[0];
+                    String itemName = itemPart[1];
+                    double price = Double.parseDouble(itemPart[2]);
+                    String description = itemPart[3];
+                    boolean forSale = Boolean.parseBoolean(itemPart[4]);
+
+                    // Find owner by username
+                    User owner = findByUsername(ownerName);
+                    if (owner == null) {
+                        System.out.println("Warning: Owner not found for item: " + itemName);
+                        continue;
+                    }
+
+                    Item item = new Item(owner, itemName, price, description, forSale);
+                    allItemList.add(item);
+                } catch (NumberFormatException e) {
+                    System.out.println("Warning: Invalid price format in item data: " + line);
+                }
             }
-        } catch (FileNotFoundException e) {
-            System.out.println("Error: File not found");
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("Error reading item database: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -316,12 +358,16 @@ public class Database {
         }
         Item item = new Item(owner, itemName, price, description, true);
         allItemList.add(item);
-         try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allItemFileName), true))) {
+
+        // Write just this item to the file (append mode)
+        try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allItemFileName), true))) {
             bfw.write(item.toFileString());
             bfw.newLine();
-         } catch (IOException e) {
+            bfw.flush(); // Ensure data is written immediately
+        } catch (IOException e) {
             System.out.println("Error: IO Exception");
-         }
+            return false;
+        }
         return true;
     }
 

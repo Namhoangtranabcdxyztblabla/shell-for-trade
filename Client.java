@@ -393,14 +393,21 @@ public class Client{
             write("viewItems");
 
             Object response = read();
-            if (response instanceof ArrayList) {
-                return (ArrayList<Item>) response;
+            if (response instanceof ArrayList<?> list) {
+                // Cast with proper type checking
+                if (!list.isEmpty() && list.getFirst() instanceof Item) {
+                    return (ArrayList<Item>) list;
+                } else {
+                    System.out.println("Error: Received empty or non-Item list");
+                    return new ArrayList<>();
+                }
             } else {
-                System.out.println("Error: Unexpected response from server");
+                System.out.println("Error: Unexpected response from server: " + response);
                 return new ArrayList<>();
             }
         } catch (Exception e) {
             System.out.println("Error retrieving items: " + e.getMessage());
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }

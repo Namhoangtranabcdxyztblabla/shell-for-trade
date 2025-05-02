@@ -14,6 +14,7 @@ public class Item implements ItemInterface, Serializable {
         this.itemName = itemName;
         this.price = price;
         this.forSale = forSale;
+        this.description = description;
     }
     
     public User getOwner() {
