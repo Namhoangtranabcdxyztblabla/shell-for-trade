@@ -7,12 +7,12 @@ import java.util.HashMap;
  * for sending messages and retrieving conversation history between users.
  */
 public class MessageDatabase {
-    private ArrayList<String> fileNameList;
+    public ArrayList<String> fileNameList;
 
     //using username as id
-    private HashMap<String, ArrayList<String>> userMessageList;
+    public HashMap<String, ArrayList<String>> userMessageList;
 
-    private Database database; //we may need this later
+    public Database database; //we may need this later
 
     private final String fileNameForFileNameList = "fileNameList.txt";
 
@@ -40,7 +40,7 @@ public class MessageDatabase {
                 userMessageList.get(parts[1]).add(parts[0]);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("IO Exception");
         } finally {
             database = new Database();
             database.loadDatabase();

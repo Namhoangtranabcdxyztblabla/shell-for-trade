@@ -1,4 +1,6 @@
-public class Item implements ItemInterface {
+import java.io.Serializable;
+
+public class Item implements ItemInterface, Serializable {
 
     private User owner;
     private String itemName;

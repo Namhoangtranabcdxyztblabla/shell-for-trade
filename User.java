@@ -1,7 +1,8 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-public class User implements UserInterface{
+public class User implements UserInterface, Serializable {
     private String name;
     private String email;
     private String password;

@@ -1,13 +1,22 @@
 import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
+/**
+ *
+ * This is the Database class of the project. It holds all the data
+ * for the marketplace and allows users to interact with items and other users
+ *
+ * @author Anchit, Nam, Terry, Garv
+ * @version April 20 2025
+ *
+ */
 
 public class Database {
-    //private HashMap<String,String> userIDPassword; // this was never used
-    //private ArrayList<String> allUserEmail; // only used once
-    //private ArrayList<String> allUsername;
+    // private HashMap<String,String> userIDPassword; // this was never used
+    // private ArrayList<String> allUserEmail; // only used once
+    // private ArrayList<String> allUsername;
 
-    private HashMap<String, User> allUserList;
+    public HashMap<String, User> allUserList;
     ArrayList<Item> allItemList;
     private final String allUserFileName = "allUser.txt";
     private final String allItemFileName = "MarketInventory.txt";
@@ -18,10 +27,10 @@ public class Database {
         loadDatabase();
     }
 
-
     /**
      * Loads all user and item data from files into memory.
-     * This method reads from two files: allUser.txt for user data and MarketInventory.txt for item data.
+     * This method reads from two files: allUser.txt for user data and
+     * MarketInventory.txt for item data.
      */
     public synchronized void loadDatabase() {
         File userFile = new File(allUserFileName);
@@ -30,15 +39,15 @@ public class Database {
         try (BufferedReader bfr = new BufferedReader(new FileReader(userFile))) {
             String line;
             while ((line = bfr.readLine()) != null) {
-                String[] parts = line.split(";");
+                String[] parts = line.split(",");
                 String username = parts[0];
                 String password = parts[1];
                 String email = parts[2];
                 double balance = Double.parseDouble(parts[3]);
-                allUserList.put(email, new User(username, password, email, balance)); // note: 
-                //allUserEmail.add(email);
-                //userIDPassword.put(email, password);
-                //allUsername.add(username); 
+                allUserList.put(email, new User(username, email, password, balance)); // note:
+                // allUserEmail.add(email);
+                // userIDPassword.put(email, password);
+                // allUsername.add(username);
             }
         } catch (FileNotFoundException e) {
             System.out.println("Error: File not found");
@@ -64,6 +73,7 @@ public class Database {
             throw new RuntimeException(e);
         }
     }
+
     /**
      * Writes all current user and item data from memory to files.
      * The method first clears existing file content, then writes all current data.
@@ -72,22 +82,22 @@ public class Database {
      */
     public synchronized boolean writeToFile() {
         try {
-        deleteContentInFile(allUserFileName);
-        deleteContentInFile(allItemFileName);
-        }catch (IOException e){
+            deleteContentInFile(allUserFileName);
+            deleteContentInFile(allItemFileName);
+        } catch (IOException e) {
             System.out.println(e.getMessage());
             return false;
         }
 
-        for (User user:allUserList.values()) {
-        try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allUserFileName), true))) {
-                 bfw.write(user.toFileString());
-                 bfw.newLine();
-             } catch (IOException e) {
-                 System.out.println("Error: IO Exception");
-                 return false;
-             }
+        for (User user : allUserList.values()) {
+            try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allUserFileName), true))) {
+                bfw.write(user.toFileString());
+                bfw.newLine();
+            } catch (IOException e) {
+                System.out.println("Error: IO Exception");
+                return false;
             }
+        }
 
         for (Item item : allItemList) {
             try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allItemFileName), true))) {
@@ -111,8 +121,9 @@ public class Database {
      */
     public synchronized ArrayList<Item> getItemsFromName(String name) {
         ArrayList<Item> found = new ArrayList<Item>();
-        for (Item item: allItemList) {
-            // check if search words contain item names or item name that have the searched word in there.
+        for (Item item : allItemList) {
+            // check if search words contain item names or item name that have the searched
+            // word in there.
             if ((item.getItemName().contains(name) || name.contains(item.getItemName())
                     && item.isForSale())) {
                 found.add(item);
@@ -120,6 +131,7 @@ public class Database {
         }
         return found;
     }
+
     /**
      * Returns all items owned by a specific user that are currently for sale.
      * This method is synchronized to prevent concurrent access issues.
@@ -129,7 +141,7 @@ public class Database {
      */
     public synchronized ArrayList<Item> getItemsFromOwner(User owner) {
         ArrayList<Item> sellerItemList = new ArrayList<>();
-        for (Item i: allItemList) {
+        for (Item i : allItemList) {
             if (i.getOwner().equals(owner) && i.isForSale()) {
                 sellerItemList.add(i);
             }
@@ -151,7 +163,7 @@ public class Database {
         // Compile the regex
         Pattern p = Pattern.compile(emailRegex);
 
-        //check the invalid email
+        // check the invalid email
         return email != null && p.matcher(email).matches();
     }
 
@@ -161,21 +173,24 @@ public class Database {
      * Validates username, email, and password before creating the account.
      * This method is synchronized to prevent concurrent access issues.
      *
-     * @param name the user's name/username
-     * @param email the user's email address (used as userID)
+     * @param name     the user's name/username
+     * @param email    the user's email address (used as userID)
      * @param password the user's password
-     * @param balance the user's initial account balance
-     * @throws InvalidAccountOperationException if username already exists, email already exists,
-     *         or any of the input fields fail validation
+     * @param balance  the user's initial account balance
+     * @throws InvalidAccountOperationException if username already exists, email
+     *                                          already exists,
+     *                                          or any of the input fields fail
+     *                                          validation
      */
-    public synchronized void createUser(String name, String email, String password, double balance) throws InvalidAccountOperationException { // guess not
-         if (findByUsername(name) != null) {
+    public synchronized void createUser(String name, String email, String password, double balance)
+            throws InvalidAccountOperationException { // guess not
+        if (findByUsername(name) != null) {
             throw new InvalidAccountOperationException("A user with this username already exists");
-         }
+        }
         if (allUserList.get(email) != null || findByUsername(name) != null) {
             throw new InvalidAccountOperationException("A user with this email already exists");
         } else {
-            if (name == null || name.startsWith(" ") ||name.trim().isEmpty()) {
+            if (name == null || name.startsWith(" ") || name.trim().isEmpty()) {
                 throw new InvalidAccountOperationException(
                         "Invalid username. Please make sure your username have at least" +
                                 " 1 character and does not start with a space.");
@@ -186,19 +201,21 @@ public class Database {
             if (password == null || password.contains(" ") || password.length() < 8 ||
                     !password.matches(".*[A-Z].*") || !password.matches(".*[a-z].*") ||
                     !password.matches(".*[0-9].*") || password.trim().isEmpty()) {
-                throw new InvalidAccountOperationException("Invalid password.Password must be at least 8 characters and " +
-                        "include at least one uppercase letter, one lowercase letter, and one digit. Password cannot start " +
-                        "with a space.");
+                throw new InvalidAccountOperationException(
+                        "Invalid password.Password must be at least 8 characters and " +
+                                "include at least one uppercase letter, one lowercase letter, and one digit. Password cannot start "
+                                +
+                                "with a space.");
             }
             User user = new User(name, email, password, balance);
             allUserList.put(email, user);
 
-            // try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allUserFileName), true))) {
-            //     bfw.write(user.toString());
-            //     bfw.newLine();
-            // } catch (IOException e) {
-            //     System.out.println("Error: IO Exception");
-            // }
+            try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allUserFileName), true))) {
+                bfw.write(user.toString());
+                bfw.newLine();
+            } catch (IOException e) {
+                System.out.println("Error: IO Exception");
+            }
         }
     }
 
@@ -219,7 +236,7 @@ public class Database {
      * @return the User object if found, null otherwise
      */
     public synchronized User findByUsername(String name) {
-        for (Map.Entry<String, User> set: allUserList.entrySet()) {
+        for (Map.Entry<String, User> set : allUserList.entrySet()) {
             if (set.getValue().getName().equals(name)) {
                 return set.getValue();
             }
@@ -233,10 +250,11 @@ public class Database {
      * throws exception with different message for each time login fail
      * This method is synchronized to prevent concurrent access issues.
      *
-     * @param email the user's email or username
+     * @param email    the user's email or username
      * @param password the user's password
      * @return true if authentication is successful
-     * @throws InvalidAccountOperationException if credentials are invalid or the account is already logged in
+     * @throws InvalidAccountOperationException if credentials are invalid or the
+     *                                          account is already logged in
      */
     public synchronized boolean login(String email, String password) throws InvalidAccountOperationException {
         User user;
@@ -246,7 +264,7 @@ public class Database {
         if (password == null || password.trim().isEmpty()) {
             throw new InvalidAccountOperationException("Password cannot be empty");
         }
-        boolean isEmail = email.contains("@") && email.contains("."); //check if this is an email or not
+        boolean isEmail = email.contains("@") && email.contains("."); // check if this is an email or not
         if (isEmail) {
             user = findByEmail(email);
         } else {
@@ -283,26 +301,27 @@ public class Database {
     /**
      * Allows a user to post an item for selling.
      *
-     * @param owner The seller who post this item.
-     * @param itemName The name of item.
-     * @param price price of item
+     * @param owner       The seller who post this item.
+     * @param itemName    The name of item.
+     * @param price       price of item
      * @param description some description about this item
      *
      * @return true if successfully remove the item
      * @throws InvalidAccountOperationException when the price is invalid
      */
-    public synchronized boolean createItem(User owner, String itemName, double price, String description) throws Exception {
+    public synchronized boolean createItem(User owner, String itemName, double price, String description)
+            throws Exception {
         if (price <= 0) {
             throw new Exception("Invalid price");
         }
         Item item = new Item(owner, itemName, price, description, true);
         allItemList.add(item);
-        // try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allItemFileName), true))) {
-        //     bfw.write(item.toFileString());
-        //     bfw.newLine();
-        // } catch (IOException e) {
-        //     System.out.println("Error: IO Exception");
-        // }
+         try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allItemFileName), true))) {
+            bfw.write(item.toFileString());
+            bfw.newLine();
+         } catch (IOException e) {
+            System.out.println("Error: IO Exception");
+         }
         return true;
     }
 
@@ -326,32 +345,33 @@ public class Database {
     public synchronized void deleteUser(User user) {
         String userEmail = user.getEmail();
         allUserList.remove(userEmail);
-        //allUserEmail.remove(userEmail);
-        //allUsername.remove(user.getName());
+        // allUserEmail.remove(userEmail);
+        // allUsername.remove(user.getName());
         allItemList.removeIf(i -> i.getOwner().equals(user));
         // try {
-        //     deleteContentInFile(allUserFileName);
-        //     deleteContentInFile(allItemFileName);
+        // deleteContentInFile(allUserFileName);
+        // deleteContentInFile(allItemFileName);
         // } catch (IOException e) {
-        //     e.printStackTrace();
+        // e.printStackTrace();
         // }
-        // try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allUserFileName), true))) {
-        //     for (Map.Entry<String, User> set : allUserList.entrySet()) {
-        //         bfw.write(set.getValue().toString());
-        //         bfw.newLine();
-        //     }
+        // try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new
+        // File(allUserFileName), true))) {
+        // for (Map.Entry<String, User> set : allUserList.entrySet()) {
+        // bfw.write(set.getValue().toString());
+        // bfw.newLine();
+        // }
         // } catch (IOException e) {
-        //     System.out.println("Error: IO Exception");
+        // System.out.println("Error: IO Exception");
         // }
-        // try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allItemFileName), true))) {
-        //     for (Item i: allItemList) {
-        //         bfw.write(i.toFileString());
-        //         bfw.newLine();
-        //     }
+        // try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new
+        // File(allItemFileName), true))) {
+        // for (Item i: allItemList) {
+        // bfw.write(i.toFileString());
+        // bfw.newLine();
+        // }
         // } catch (IOException e) {
-        //     System.out.println("Error: IO Exception");
+        // System.out.println("Error: IO Exception");
         // }
-
 
     }
 
@@ -364,40 +384,43 @@ public class Database {
         allItemList.remove(item);
         System.out.println("Remove the item successfully");
         // try {
-        //     deleteContentInFile(allItemFileName);
+        // deleteContentInFile(allItemFileName);
         // } catch (IOException e) {
-        //     e.printStackTrace();
+        // e.printStackTrace();
         // }
-        // try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new File(allItemFileName), true))) {
-        //     for (Item i: allItemList) {
-        //         bfw.write(i.toFileString());
-        //         bfw.newLine();
-        //     }
+        // try (BufferedWriter bfw = new BufferedWriter(new FileWriter(new
+        // File(allItemFileName), true))) {
+        // for (Item i: allItemList) {
+        // bfw.write(i.toFileString());
+        // bfw.newLine();
+        // }
         // } catch (IOException e) {
-        //     System.out.println("Error: IO Exception");
+        // System.out.println("Error: IO Exception");
         // }
 
     }
 
-//    // generic search function - might break if there is null in arraylist - might move to util class later
-//    // returns the EXACT object found in array
-//    public static <T> T findInArrayList(ArrayList<T> list, T obj) {
-//        for (T item : list) {
-//            if (item != null && item.equals(obj)) {
-//                return item;
-//            }
-//        }
-//        return null;
-//    }
+    // // generic search function - might break if there is null in arraylist -
+    // might move to util class later
+    // // returns the EXACT object found in array
+    // public static <T> T findInArrayList(ArrayList<T> list, T obj) {
+    // for (T item : list) {
+    // if (item != null && item.equals(obj)) {
+    // return item;
+    // }
+    // }
+    // return null;
+    // }
 
     /**
      * A method for a transaction between buyer and seller
      *
-     * @param buyer The buyer of this transaction.
+     * @param buyer  The buyer of this transaction.
      * @param seller The seller.
-     * @param item the item which is sold
-     * 
-     * @return the string if there is an error in the transaction, null if there isn't one
+     * @param item   the item which is sold
+     *
+     * @return the string if there is an error in the transaction, null if there
+     *         isn't one
      */
     public synchronized String transaction(User buyer, User seller, Item item) {
         if (!allUserList.containsValue(buyer) || !allUserList.containsValue(seller)) {
@@ -406,7 +429,7 @@ public class Database {
         if (!item.isForSale()) {
             return "Item is not sold now";
         }
-        if (item.getPrice() < buyer.getBalance()) {
+        if (item.getPrice() > buyer.getBalance()) {
             return "You do not have enough money to buy this";
         }
         seller.addBalance(item.getPrice());
@@ -416,8 +439,10 @@ public class Database {
     }
 
     /**
-     * Setting up a timer 5 minutes to auto save everything instead of just write 1 time before
-     * closing everything. Doing this will create regular backup in the case the server crashes
+     * Setting up a timer 5 minutes to auto save everything instead of just write 1
+     * time before
+     * closing everything. Doing this will create regular backup in the case the
+     * server crashes
      * or close unexpectedly.
      *
      *
@@ -430,7 +455,7 @@ public class Database {
                 writeToFile();
                 System.out.println("Auto-save completed");
             }
-        }, 10*60*1000, 10*60*1000);  // Run every 10 minutes
+        }, 10 * 60 * 1000, 10 * 60 * 1000); // Run every 10 minutes
     }
 
 }

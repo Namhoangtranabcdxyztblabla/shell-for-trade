@@ -1,10 +1,11 @@
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.Calendar;
 /**
  * Represents a message exchanged between users in the marketplace system.
  * Contains information about the sender, receiver, content, and timestamp of the message.
  */
-public class Message {
+public class Message implements Serializable {
     private String senderId;
     private String receiverId;
     private String messageContent;
